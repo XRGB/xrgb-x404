@@ -24,7 +24,7 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
     address public immutable blueChipNftAddr;
     address public immutable factory;
 
-    modifier onlyFactory() {
+    modifier onlyX404Hub() {
         if (msg.sender != factory) {
             revert Errors.OnlyCallByFactory();
         }
@@ -80,7 +80,7 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
             } else {
                 revert Errors.InvalidTokenId();
             }
-            emit Events.X404ReceiptNFT(
+            emit Events.X404DepositNFT(
                 msg.sender,
                 msg.sender,
                 tokenIds[i],
@@ -117,6 +117,7 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
             if (!tokenIdSet.remove(tokenIds[i])) {
                 revert Errors.RemoveFailed();
             }
+            emit Events.X404RedeemNFT(msg.sender, tokenIds[i]);
             unchecked {
                 i++;
             }
@@ -148,7 +149,7 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
         } else {
             revert Errors.InvalidTokenId();
         }
-        emit Events.X404ReceiptNFT(caller, from, tokenId, redeemDeadline);
+        emit Events.X404DepositNFT(caller, from, tokenId, redeemDeadline);
 
         return IERC721Receiver.onERC721Received.selector;
     }
@@ -169,12 +170,12 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
 
     function setContractURI(
         string calldata newContractUri
-    ) public onlyFactory returns (bool) {
+    ) public onlyX404Hub returns (bool) {
         contractURI = newContractUri;
         return true;
     }
 
-    function setTokenURI(string calldata _tokenURI) public onlyFactory {
+    function setTokenURI(string calldata _tokenURI) public onlyX404Hub {
         baseTokenURI = _tokenURI;
     }
 

@@ -54,7 +54,7 @@ contract X404Hub is OwnableUpgradeable, X404HubStorage {
         );
         _x404Contract[nftContractAddress] = x404;
         delete _parameters;
-        emit Events.X404Created(x404, nftContractAddress, msg.sender);
+        emit Events.X404Created(x404, nftContractAddress, msg.sender, nftUnits);
     }
 
     function setContractURI(

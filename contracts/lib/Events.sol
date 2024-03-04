@@ -5,13 +5,16 @@ library Events {
     event X404Created(
         address indexed addr,
         address indexed blueChipNftAddr,
-        address indexed creator
+        address indexed creator,
+        uint256 nftUnits
     );
 
-    event X404ReceiptNFT(
+    event X404DepositNFT(
         address indexed caller,
         address indexed from,
         uint256 indexed tokenId,
         uint256 redeemDeadline
     );
+
+    event X404RedeemNFT(address indexed redeemer, uint256 indexed tokenId);
 }

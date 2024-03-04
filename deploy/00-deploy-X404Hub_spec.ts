@@ -9,8 +9,8 @@ const deployFn: DeployFunction = async (hre) => {
   const swapRouterArray = [
     {
       bV2orV3: true,
-      routerAddr: '0x3512ebD0Eb455f2FFDE4908D24F64aba7995951C',
-      uniswapV3NonfungiblePositionManager: ZeroAddress,
+      routerAddr: '0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45',
+      uniswapV3NonfungiblePositionManager: '0xC36442b4a4522E871399CD717aBDD847Ab11FE88',
     },
   ];
   const maxRedeemDeadline = 30 * 24 * 60 * 60;
