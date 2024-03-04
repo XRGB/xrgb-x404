@@ -18,7 +18,7 @@ contract X404Hub is OwnableUpgradeable, X404HubStorage {
                 revert Errors.NotBlueChipNFT();
             }
         }
-        if (redeemMaxDeadline == 0) {
+        if (_redeemMaxDeadline == 0) {
             revert Errors.InvaildRedeemMaxDeadline();
         }
         _;
@@ -36,7 +36,7 @@ contract X404Hub is OwnableUpgradeable, X404HubStorage {
         for (uint256 i = 0; i < swapRouterAddr.length; i++) {
             _swapRouterAddr.push(swapRouterAddr[i]);
         }
-        redeemMaxDeadline = maxRedeemDeadline;
+        _redeemMaxDeadline = maxRedeemDeadline;
     }
 
     function createX404(
@@ -46,7 +46,7 @@ contract X404Hub is OwnableUpgradeable, X404HubStorage {
         _parameters = DataTypes.CreateX404Parameters({
             nftContractAddr: nftContractAddress,
             creator: msg.sender,
-            redeemMaxDeadline: redeemMaxDeadline,
+            redeemMaxDeadline: _redeemMaxDeadline,
             nftUnits: nftUnits
         });
         x404 = address(
@@ -81,7 +81,7 @@ contract X404Hub is OwnableUpgradeable, X404HubStorage {
         if (newDeadline == 0) {
             revert Errors.InvaildRedeemMaxDeadline();
         }
-        redeemMaxDeadline = newDeadline;
+        _redeemMaxDeadline = newDeadline;
     }
 
     function setSwapRouter(
@@ -98,6 +98,18 @@ contract X404Hub is OwnableUpgradeable, X404HubStorage {
 
     function emergencyClose(bool bClose) public onlyOwner {
         _bEmergencyClose = bClose;
+    }
+
+    function setForceBuyParam(uint256 amount, uint256 ratio) public onlyOwner {
+        if (amount == 0 || ratio < 10000) {
+            revert Errors.InvalidAmount();
+        }
+        _mininumNftCanForceBuy = amount;
+        _forceBuyratio = amount;
+    }
+
+    function getForceBuyParam() public view returns (uint256, uint256) {
+        return (_mininumNftCanForceBuy, _forceBuyratio);
     }
 
     function setBlueChipNftContract(

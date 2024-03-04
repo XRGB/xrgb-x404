@@ -10,4 +10,9 @@ contract MockUniswapV2Router02 is IUniswapV2Router {
         factory = _factory;
         WETH = _WETH;
     }
+
+    function getAmountsOut(
+        uint amountIn,
+        address[] calldata path
+    ) external view returns (uint[] memory amounts) {}
 }

@@ -13,8 +13,14 @@ library Errors {
     error InvalidNFTAddress();
     error InvalidDeadLine();
     error InvalidTokenId();
+    error InvalidAmount();
     error NFTCannotRedeem();
     error RemoveFailed();
     error EmergencyClose();
     error InvaildRedeemMaxDeadline();
+    error CannotForceBuy();
+    error NotEnoughToBuy();
+    error CannotForceBuyFromContract();
+    error MsgValueNotEnough();
+    error SendETHFailed();
 }

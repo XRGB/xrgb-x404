@@ -16,5 +16,9 @@ library Events {
         uint256 redeemDeadline
     );
 
-    event X404RedeemNFT(address indexed redeemer, uint256 indexed tokenId);
+    event X404RedeemNFT(
+        address indexed redeemer,
+        address indexed depositor,
+        uint256 indexed tokenId
+    );
 }

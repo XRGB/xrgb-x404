@@ -13,6 +13,11 @@ interface IX404Hub {
             uint256 nftUnits
         );
 
+    function getForceBuyParam()
+        external
+        view
+        returns (uint256 minimumNftAmount, uint256 ratio);
+
     function owner() external view returns (address owner);
 
     function getSwapRouter()

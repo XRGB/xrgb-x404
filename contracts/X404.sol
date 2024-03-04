@@ -5,11 +5,12 @@ pragma solidity ^0.8.17;
 import {ERC404} from "./ERC404.sol";
 import {IX404Hub} from "./interfaces/IX404Hub.sol";
 import {IPeripheryImmutableState} from "./interfaces/IPeripheryImmutableState.sol";
+import {IUniswapV3PoolState} from "./interfaces/IUniswapV3PoolState.sol";
 import {IUniswapV2Router} from "./interfaces/IUniswapV2Router.sol";
 import {DataTypes} from "./lib/DataTypes.sol";
 import {Errors} from "./lib/Errors.sol";
 import {Events} from "./lib/Events.sol";
-import {LibCalculatePair} from "./lib/LibCalculatePair.sol";
+import {LibCalculate} from "./lib/LibCalculate.sol";
 import {X404Storage} from "./storage/X404Storage.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -22,10 +23,10 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
 
     address public immutable creator;
     address public immutable blueChipNftAddr;
-    address public immutable factory;
+    address public immutable x404Hub;
 
     modifier onlyX404Hub() {
-        if (msg.sender != factory) {
+        if (msg.sender != x404Hub) {
             revert Errors.OnlyCallByFactory();
         }
         _;
@@ -48,10 +49,13 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
             .getSwapRouter();
         _setRouterTransferExempt(swapRouterStruct);
         _setERC721TransferExempt(address(this), true);
-        factory = msg.sender;
+        x404Hub = msg.sender;
         _transferOwnership(newOwner);
     }
 
+    /// @notice redeem nfts from contract when user hold n * units erc20 token
+    /// @param tokenIds The array tokenid of deposit nft.
+    /// @param redeemDeadline The redeemDeadline. means before deadline, Only you can redeem your nft. after deadline, anyone who hold more than units erc20 token can redeem your nft.
     function depositNFT(
         uint256[] calldata tokenIds,
         uint256 redeemDeadline
@@ -93,6 +97,8 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
         _transferERC20WithERC721(address(0), msg.sender, len * units);
     }
 
+    /// @notice redeem nfts from contract when user hold n * units erc20 token
+    /// @param tokenIds The array tokenid of redeem nft.
     function redeemNFT(uint256[] calldata tokenIds) external {
         uint256 len = tokenIds.length;
         if (len == 0) {
@@ -102,8 +108,9 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
         _transferERC20WithERC721(msg.sender, address(0), units * len);
 
         for (uint256 i = 0; i < tokenIds.length; ) {
+            address oriOwner = nftDepositInfo[tokenIds[i]].oriOwner;
             if (
-                nftDepositInfo[tokenIds[i]].oriOwner != msg.sender &&
+                oriOwner != msg.sender &&
                 nftDepositInfo[tokenIds[i]].redeemDeadline > block.timestamp
             ) {
                 revert Errors.NFTCannotRedeem();
@@ -113,17 +120,22 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
                 msg.sender,
                 tokenIds[i]
             );
+            emit Events.X404RedeemNFT(msg.sender, oriOwner, tokenIds[i]);
             delete nftDepositInfo[tokenIds[i]];
             if (!tokenIdSet.remove(tokenIds[i])) {
                 revert Errors.RemoveFailed();
             }
-            emit Events.X404RedeemNFT(msg.sender, tokenIds[i]);
             unchecked {
                 i++;
             }
         }
     }
 
+    /// @notice when user send nft to this contract by "safeTransferFrom"
+    /// @param caller caller who call function "safeTransferFrom".
+    /// @param from The Nft owner
+    /// @param tokenId The nft tokenid
+    /// @param data The redeem deadline
     function onERC721Received(
         address caller,
         address from,
@@ -154,16 +166,49 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
         return IERC721Receiver.onERC721Received.selector;
     }
 
-    function getTokenIdSet() external view returns (uint256[] memory) {
-        return tokenIdSet.values();
-    }
+    /// @notice Force buy token from someone when the nft hold by this contract is less than minimumNftAmount, to avoid can not redeem nft anymore
+    /// @param forcedSeller the account force buy token from.
+    /// @param amount The amount of force buy
+    function forceBuy(address forcedSeller, uint256 amount) external payable {
+        if (forcedSeller.code.length > 0) {
+            revert Errors.CannotForceBuyFromContract();
+        }
 
-    function checkTokenIdExsit(uint256 tokenId) external view returns (bool) {
-        return tokenIdSet.contains(tokenId);
-    }
+        (uint256 minimumNftAmount, uint256 ratio) = IX404Hub(x404Hub)
+            .getForceBuyParam();
+        uint256 nftAmount = IERC721Metadata(blueChipNftAddr).balanceOf(
+            address(this)
+        );
+        if (nftAmount > minimumNftAmount) {
+            revert Errors.CannotForceBuy();
+        }
+        uint256 balance = balanceOf[forcedSeller];
+        if (amount > balance) {
+            revert Errors.NotEnoughToBuy();
+        }
 
-    function getTokenIdByIndex(uint256 index) external view returns (uint256) {
-        return tokenIdSet.at(index);
+        DataTypes.SwapRouter[] memory swapRouterStruct = IX404Hub(msg.sender)
+            .getSwapRouter();
+        uint256 ethAmount = LibCalculate._getHighestPriceFromSwap(
+            amount,
+            swapRouterStruct
+        );
+        uint256 finalPrice = (ethAmount * ratio) / 10000;
+        if (msg.value < finalPrice) {
+            revert Errors.MsgValueNotEnough();
+        }
+        (bool success, ) = forcedSeller.call{value: finalPrice}("");
+        if (!success) {
+            revert Errors.SendETHFailed();
+        }
+        if (msg.value > finalPrice) {
+            (bool success1, ) = msg.sender.call{value: msg.value - finalPrice}(
+                ""
+            );
+            if (!success1) {
+                revert Errors.SendETHFailed();
+            }
+        }
     }
 
     /**************Only Call By Factory Function **********/
@@ -198,7 +243,7 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
             if (swapRouterStruct[i].bV2orV3) {
                 address weth_ = IUniswapV2Router(routerAddr).WETH();
                 address swapFactory = IUniswapV2Router(routerAddr).factory();
-                address pair = LibCalculatePair._getUniswapV2Pair(
+                address pair = LibCalculate._getUniswapV2Pair(
                     swapFactory,
                     thisAddress,
                     weth_
@@ -245,7 +290,7 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
         ];
 
         for (uint256 i = 0; i < feeTiers.length; ) {
-            address v3PairAddr = LibCalculatePair._getUniswapV3Pair(
+            address v3PairAddr = LibCalculate._getUniswapV3Pair(
                 swapFactory,
                 tokenA,
                 tokenB,
