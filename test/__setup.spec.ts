@@ -7,12 +7,14 @@ import {
   X404Hub,
   Events,
   Events__factory,
-  MockUniswapV2Router02__factory
+  MockUniswapV2Router02__factory,
+  LibCalculate__factory
 } from '../typechain-types';
 import {
   revertToSnapshot,
   takeSnapshot
 } from './helpers/utils';
+import { LibCaculatePair__factory } from '../typechain-types/factories/contracts/lib/LibCaculatePair__factory';
 
 export let accounts: Signer[];
 export let deployer: Signer;
@@ -72,8 +74,14 @@ before(async function () {
     },
   ];
   
-  const X404Hub = await ethers.getContractFactory("X404Hub");
-  const proxy = await upgrades.deployProxy(X404Hub, [ownerAddress, 24 * 60 * 60, swapRouterArray]);
+  const LibCaculate = await new LibCalculate__factory(deployer).deploy();
+  const LibCaculateAddr = await LibCaculate.getAddress();
+  const X404Hub = await ethers.getContractFactory("X404Hub", {
+    libraries: {
+      LibCalculate: LibCaculateAddr,
+    },
+  });
+  const proxy = await upgrades.deployProxy(X404Hub, [ownerAddress, 24 * 60 * 60, swapRouterArray], { unsafeAllowLinkedLibraries: true });
   const proxyAddress = await proxy.getAddress()
   console.log("proxy address: ", proxyAddress)
   console.log("admin address: ", await upgrades.erc1967.getAdminAddress(proxyAddress))

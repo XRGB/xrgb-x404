@@ -71,7 +71,7 @@ makeSuiteCleanRoom('create X404', function () {
                 expect(await x404.connect(owner).baseTokenURI()).to.equal(TokenURI)
 
                 expect(await x404Hub.connect(owner).setNewRedeemDeadline(7 * 24 * 3600)).to.be.not.reverted
-                expect(await x404Hub.connect(owner).redeemMaxDeadline()).to.equal(7 * 24 * 3600)
+                expect(await x404Hub.connect(owner)._redeemMaxDeadline()).to.equal(7 * 24 * 3600)
             });
         })
     })

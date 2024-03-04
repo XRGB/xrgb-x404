@@ -23,4 +23,5 @@ library Errors {
     error CannotForceBuyFromContract();
     error MsgValueNotEnough();
     error SendETHFailed();
+    error OnlySupportEOA();
 }

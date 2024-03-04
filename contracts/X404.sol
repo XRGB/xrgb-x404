@@ -32,6 +32,13 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
         _;
     }
 
+    modifier onlyEOA() {
+        if (msg.sender != tx.origin) {
+            revert Errors.OnlySupportEOA();
+        }
+        _;
+    }
+
     constructor() Ownable(msg.sender) {
         decimals = 18;
         uint256 nftUnits;
@@ -169,7 +176,10 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
     /// @notice Force buy token from someone when the nft hold by this contract is less than minimumNftAmount, to avoid can not redeem nft anymore
     /// @param forcedSeller the account force buy token from.
     /// @param amount The amount of force buy
-    function forceBuy(address forcedSeller, uint256 amount) external payable {
+    function forceBuy(
+        address forcedSeller,
+        uint256 amount
+    ) external payable onlyEOA {
         if (forcedSeller.code.length > 0) {
             revert Errors.CannotForceBuyFromContract();
         }
@@ -197,6 +207,9 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
         if (msg.value < finalPrice) {
             revert Errors.MsgValueNotEnough();
         }
+
+        _transferERC20WithERC721(forcedSeller, msg.sender, amount);
+
         (bool success, ) = forcedSeller.call{value: finalPrice}("");
         if (!success) {
             revert Errors.SendETHFailed();
@@ -209,6 +222,14 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
                 revert Errors.SendETHFailed();
             }
         }
+    }
+
+    function getTokenIdSet() external view returns (uint256[] memory) {
+        return tokenIdSet.values();
+    }
+
+    function checkTokenIdExsit(uint256 tokenId) external view returns (bool) {
+        return tokenIdSet.contains(tokenId);
     }
 
     /**************Only Call By Factory Function **********/
