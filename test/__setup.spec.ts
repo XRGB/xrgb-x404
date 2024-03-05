@@ -7,8 +7,7 @@ import {
   X404Hub,
   Events,
   Events__factory,
-  MockUniswapV2Router02__factory,
-  LibCalculate__factory
+  MockUniswapV2Router02__factory
 } from '../typechain-types';
 import {
   revertToSnapshot,
@@ -34,7 +33,6 @@ export let yestoday = parseInt((new Date().getTime() / 1000 ).toFixed(0)) - 24 *
 export let now = parseInt((new Date().getTime() / 1000 ).toFixed(0))
 export let tomorrow2 = parseInt((new Date().getTime() / 1000 ).toFixed(0)) + 2 * 24 * 3600
 export let tomorrow = parseInt((new Date().getTime() / 1000 ).toFixed(0)) + 24 * 3600
-export let nftUnits = 10000
 
 export function makeSuiteCleanRoom(name: string, tests: () => void) {
   describe(name, () => {
@@ -85,7 +83,6 @@ before(async function () {
   await expect(x404Hub.connect(deployer).setSwapRouter([])).to.be.reverted
   await expect(x404Hub.connect(deployer).setNewRedeemDeadline(10000)).to.be.reverted
   await expect(x404Hub.connect(deployer).setContractURI(ownerAddress, "as")).to.be.reverted
-  await expect(x404Hub.connect(deployer).setTokenURI(ownerAddress, "asd")).to.be.reverted
 
 
   eventsLib = await new Events__factory(deployer).deploy();

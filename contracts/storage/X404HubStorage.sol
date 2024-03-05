@@ -10,4 +10,5 @@ abstract contract X404HubStorage {
     DataTypes.SwapRouter[] public _swapRouterAddr;
     mapping(address => bool) public _blueChipNftContract;
     mapping(address => address) public _x404Contract;
+    mapping(uint256 => bool) public _supportChain;
 }

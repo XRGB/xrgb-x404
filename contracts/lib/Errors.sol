@@ -24,4 +24,6 @@ library Errors {
     error MsgValueNotEnough();
     error SendETHFailed();
     error OnlySupportEOA();
+    error CannotBridgeSelf();
+    error NotSuportThisChainId();
 }

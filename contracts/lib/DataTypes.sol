@@ -13,7 +13,6 @@ library DataTypes {
         address nftContractAddr;
         address creator;
         uint256 redeemMaxDeadline;
-        uint256 nftUnits;
     }
 
     struct SwapRouter {

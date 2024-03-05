@@ -40,12 +40,16 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
 
     constructor() Ownable(msg.sender) {
         decimals = 18;
-        uint256 nftUnits;
-        (blueChipNftAddr, creator, maxRedeemDeadline, nftUnits) = IX404Hub(
-            msg.sender
-        )._parameters();
+        (blueChipNftAddr, creator, maxRedeemDeadline) = IX404Hub(msg.sender)
+            ._parameters();
 
-        units = nftUnits * 10 ** 18;
+        uint256 _chainId;
+        assembly {
+            _chainId := chainid()
+        }
+        chainId = _chainId;
+
+        units = 10 ** 18;
         address newOwner = IX404Hub(msg.sender).owner();
         string memory oriName = IERC721Metadata(blueChipNftAddr).name();
         string memory oriSymbol = IERC721Metadata(blueChipNftAddr).symbol();
@@ -137,6 +141,22 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
         }
     }
 
+    function bridgeX404To(uint256 amount, uint256 bridgeTo) external {
+        if (amount == 0) {
+            revert Errors.InvalidAmount();
+        }
+        if (bridgeTo == chainId) {
+            revert Errors.CannotBridgeSelf();
+        }
+        bool bSupport = IX404Hub(x404Hub)._supportChain(bridgeTo);
+        if (!bSupport) {
+            revert Errors.NotSuportThisChainId();
+        }
+        _transferERC20WithERC721(msg.sender, address(0), amount);
+
+        emit Events.X404BridgeTo(msg.sender, bridgeTo, amount);
+    }
+
     /// @notice when user send nft to this contract by "safeTransferFrom"
     /// @param caller caller who call function "safeTransferFrom".
     /// @param from The Nft owner
@@ -190,10 +210,6 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
     ) external onlyX404Hub returns (bool) {
         contractURI = newContractUri;
         return true;
-    }
-
-    function setTokenURI(string calldata _tokenURI) external onlyX404Hub {
-        baseTokenURI = _tokenURI;
     }
 
     function tokenURI(uint256 id) public view override returns (string memory) {

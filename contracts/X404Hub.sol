@@ -40,23 +40,23 @@ contract X404Hub is OwnableUpgradeable, X404HubStorage {
     }
 
     function createX404(
-        address nftContractAddress,
-        uint256 nftUnits
+        address nftContractAddress
     ) external checkPermission(nftContractAddress) returns (address x404) {
         _parameters = DataTypes.CreateX404Parameters({
             nftContractAddr: nftContractAddress,
             creator: msg.sender,
-            redeemMaxDeadline: _redeemMaxDeadline,
-            nftUnits: nftUnits
+            redeemMaxDeadline: _redeemMaxDeadline
         });
         x404 = address(
             new X404{salt: keccak256(abi.encode(nftContractAddress))}()
         );
         _x404Contract[nftContractAddress] = x404;
         delete _parameters;
-        emit Events.X404Created(x404, nftContractAddress, msg.sender, nftUnits);
+        emit Events.X404Created(x404, nftContractAddress, msg.sender);
     }
 
+    /* *****************Only Owner********************
+     */
     function setContractURI(
         address nftContract,
         string calldata newContractUri
@@ -67,14 +67,8 @@ contract X404Hub is OwnableUpgradeable, X404HubStorage {
         X404(_x404Contract[nftContract]).setContractURI(newContractUri);
     }
 
-    function setTokenURI(
-        address nftContract,
-        string calldata newTokenURI
-    ) public onlyOwner {
-        if (_x404Contract[nftContract] == address(0)) {
-            revert Errors.X404NotCreate();
-        }
-        X404(_x404Contract[nftContract]).setTokenURI(newTokenURI);
+    function setSupportChain(uint256 chainId, bool bSet) external onlyOwner {
+        _supportChain[chainId] = bSet;
     }
 
     function setNewRedeemDeadline(uint256 newDeadline) public onlyOwner {
