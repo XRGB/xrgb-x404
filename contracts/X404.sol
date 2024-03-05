@@ -10,7 +10,7 @@ import {IUniswapV2Router} from "./interfaces/IUniswapV2Router.sol";
 import {DataTypes} from "./lib/DataTypes.sol";
 import {Errors} from "./lib/Errors.sol";
 import {Events} from "./lib/Events.sol";
-import {LibCalculate} from "./lib/LibCalculate.sol";
+import {LibCalculatePair} from "./lib/LibCalculatePair.sol";
 import {X404Storage} from "./storage/X404Storage.sol";
 import {Strings} from "@openzeppelin/contracts/utils/Strings.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
@@ -173,57 +173,6 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
         return IERC721Receiver.onERC721Received.selector;
     }
 
-    /// @notice Force buy token from someone when the nft hold by this contract is less than minimumNftAmount, to avoid can not redeem nft anymore
-    /// @param forcedSeller the account force buy token from.
-    /// @param amount The amount of force buy
-    function forceBuy(
-        address forcedSeller,
-        uint256 amount
-    ) external payable onlyEOA {
-        if (forcedSeller.code.length > 0) {
-            revert Errors.CannotForceBuyFromContract();
-        }
-
-        (uint256 minimumNftAmount, uint256 ratio) = IX404Hub(x404Hub)
-            .getForceBuyParam();
-        uint256 nftAmount = IERC721Metadata(blueChipNftAddr).balanceOf(
-            address(this)
-        );
-        if (nftAmount > minimumNftAmount) {
-            revert Errors.CannotForceBuy();
-        }
-        uint256 balance = balanceOf[forcedSeller];
-        if (amount > balance) {
-            revert Errors.NotEnoughToBuy();
-        }
-
-        DataTypes.SwapRouter[] memory swapRouterStruct = IX404Hub(msg.sender)
-            .getSwapRouter();
-        uint256 ethAmount = LibCalculate._getHighestPriceFromSwap(
-            amount,
-            swapRouterStruct
-        );
-        uint256 finalPrice = (ethAmount * ratio) / 10000;
-        if (msg.value < finalPrice) {
-            revert Errors.MsgValueNotEnough();
-        }
-
-        _transferERC20WithERC721(forcedSeller, msg.sender, amount);
-
-        (bool success, ) = forcedSeller.call{value: finalPrice}("");
-        if (!success) {
-            revert Errors.SendETHFailed();
-        }
-        if (msg.value > finalPrice) {
-            (bool success1, ) = msg.sender.call{value: msg.value - finalPrice}(
-                ""
-            );
-            if (!success1) {
-                revert Errors.SendETHFailed();
-            }
-        }
-    }
-
     function getTokenIdSet() external view returns (uint256[] memory) {
         return tokenIdSet.values();
     }
@@ -264,7 +213,7 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
             if (swapRouterStruct[i].bV2orV3) {
                 address weth_ = IUniswapV2Router(routerAddr).WETH();
                 address swapFactory = IUniswapV2Router(routerAddr).factory();
-                address pair = LibCalculate._getUniswapV2Pair(
+                address pair = LibCalculatePair._getUniswapV2Pair(
                     swapFactory,
                     thisAddress,
                     weth_
@@ -311,7 +260,7 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
         ];
 
         for (uint256 i = 0; i < feeTiers.length; ) {
-            address v3PairAddr = LibCalculate._getUniswapV3Pair(
+            address v3PairAddr = LibCalculatePair._getUniswapV3Pair(
                 swapFactory,
                 tokenA,
                 tokenB,

@@ -74,13 +74,7 @@ before(async function () {
     },
   ];
   
-  const LibCaculate = await new LibCalculate__factory(deployer).deploy();
-  const LibCaculateAddr = await LibCaculate.getAddress();
-  const X404Hub = await ethers.getContractFactory("X404Hub", {
-    libraries: {
-      LibCalculate: LibCaculateAddr,
-    },
-  });
+  const X404Hub = await ethers.getContractFactory("X404Hub");
   const proxy = await upgrades.deployProxy(X404Hub, [ownerAddress, 24 * 60 * 60, swapRouterArray], { unsafeAllowLinkedLibraries: true });
   const proxyAddress = await proxy.getAddress()
   console.log("proxy address: ", proxyAddress)
