@@ -8,7 +8,7 @@ abstract contract X404HubStorage {
     bool internal _bEmergencyClose;
     uint256 public _redeemMaxDeadline;
     uint256 internal _mininumNftCanForceBuy;
-    uint256 internal _forceBuyratio;
+    uint256 internal _forceBuyRatio;
     DataTypes.SwapRouter[] public _swapRouterAddr;
     mapping(address => bool) public _blueChipNftContract;
     mapping(address => address) public _x404Contract;

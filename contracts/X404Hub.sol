@@ -105,11 +105,11 @@ contract X404Hub is OwnableUpgradeable, X404HubStorage {
             revert Errors.InvalidAmount();
         }
         _mininumNftCanForceBuy = amount;
-        _forceBuyratio = amount;
+        _forceBuyRatio = amount;
     }
 
     function getForceBuyParam() public view returns (uint256, uint256) {
-        return (_mininumNftCanForceBuy, _forceBuyratio);
+        return (_mininumNftCanForceBuy, _forceBuyRatio);
     }
 
     function setBlueChipNftContract(

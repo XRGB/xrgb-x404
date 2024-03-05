@@ -236,12 +236,12 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
 
     function setContractURI(
         string calldata newContractUri
-    ) public onlyX404Hub returns (bool) {
+    ) external onlyX404Hub returns (bool) {
         contractURI = newContractUri;
         return true;
     }
 
-    function setTokenURI(string calldata _tokenURI) public onlyX404Hub {
+    function setTokenURI(string calldata _tokenURI) external onlyX404Hub {
         baseTokenURI = _tokenURI;
     }
 
@@ -252,7 +252,7 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
     /**************Internal Function **********/
     function _setRouterTransferExempt(
         DataTypes.SwapRouter[] memory swapRouterStruct
-    ) internal {
+    ) private {
         address thisAddress = address(this);
         for (uint i = 0; i < swapRouterStruct.length; ) {
             address routerAddr = swapRouterStruct[i].routerAddr;
@@ -302,7 +302,7 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
         address swapFactory,
         address tokenA,
         address tokenB
-    ) internal {
+    ) private {
         uint24[4] memory feeTiers = [
             uint24(100),
             uint24(500),

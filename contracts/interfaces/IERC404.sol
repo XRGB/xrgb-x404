@@ -105,16 +105,4 @@ interface IERC404 is IERC165 {
         uint256 id_,
         bytes calldata data_
     ) external;
-
-    function DOMAIN_SEPARATOR() external view returns (bytes32);
-
-    function permit(
-        address owner_,
-        address spender_,
-        uint256 value_,
-        uint256 deadline_,
-        uint8 v_,
-        bytes32 r_,
-        bytes32 s_
-    ) external;
 }
