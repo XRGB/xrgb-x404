@@ -29,6 +29,9 @@ abstract contract ERC404 is IERC404 {
     /// @dev Total supply in ERC-20 representation
     uint256 public totalSupply;
 
+    /// @dev Max Nft TokenId in ERC-721 representation
+    uint256 public maxNftTokenId;
+
     /// @dev Current mint counter which also represents the highest
     ///      minted id, monotonically increasing to ensure accurate ownership
     uint256 public minted;
@@ -355,7 +358,7 @@ abstract contract ERC404 is IERC404 {
     }
 
     function _isValidTokenId(uint256 id_) internal view returns (bool) {
-        return id_ <= minted && id_ != type(uint256).max;
+        return id_ <= maxNftTokenId;
     }
 
     /// @notice This is the lowest level ERC-20 transfer function, which
@@ -542,18 +545,28 @@ abstract contract ERC404 is IERC404 {
         return true;
     }
 
-    /// @notice Internal function for ERC20 minting
+    /// @notice Internal function for ERC20 minting with
     /// @dev This function will allow minting of new ERC20s.
     ///      If mintCorrespondingERC721s_ is true, and the recipient is not ERC-721 exempt, it will
     ///      also mint the corresponding ERC721s.
     /// Handles ERC-721 exemptions.
-    function _mintERC20(address to_, uint256 value_) internal virtual {
+    function _mintERC20WithSpecificTokenId(
+        address to_,
+        uint256 value_,
+        uint256[] memory tokenIds
+    ) internal virtual {
         /// You cannot mint to the zero address (you can't mint and immediately burn in the same transfer).
         if (to_ == address(0)) {
             revert InvalidRecipient();
         }
-
-        _transferERC20WithERC721(address(0), to_, value_);
+        _transferERC20(address(0), to_, value_);
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            ++minted;
+            if (tokenIds[i] > maxNftTokenId) {
+                maxNftTokenId = tokenIds[i];
+            }
+            _transferERC721(address(0), to_, tokenIds[i]);
+        }
     }
 
     /// @notice Internal function for ERC-721 minting and retrieval from the bank.
@@ -572,14 +585,15 @@ abstract contract ERC404 is IERC404 {
             id = _storedERC721Ids.popBack();
         } else {
             // Otherwise, mint a new token, should not be able to go over the total fractional supply.
-            ++minted;
+            // ++minted;
 
-            // Reserve max uint256 for approvals
-            if (minted == type(uint256).max) {
-                revert MintLimitReached();
-            }
+            // // Reserve max uint256 for approvals
+            // if (minted == type(uint256).max) {
+            //     revert MintLimitReached();
+            // }
 
-            id = minted;
+            // id = minted;
+            revert NoAvaiableTokenID();
         }
         address erc721Owner = _getOwnerOf(id);
 

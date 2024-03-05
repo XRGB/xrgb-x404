@@ -43,6 +43,8 @@ makeSuiteCleanRoom('depositNFT', function () {
 
             blueChipNft = BlueChipNFT__factory.connect(blueChipAddr)
             expect(await blueChipNft.connect(user).mint()).to.be.not.reverted
+            expect(await blueChipNft.connect(user).mint()).to.be.not.reverted
+            expect(await blueChipNft.connect(user).mint()).to.be.not.reverted
             normalNft = BlueChipNFT__factory.connect(nft0Addr)
             expect(await normalNft.connect(user).mint()).to.be.not.reverted
         });
@@ -78,6 +80,13 @@ makeSuiteCleanRoom('depositNFT', function () {
                 expect(subInfo[1]).to.equal(userAddress)
                 expect(subInfo[2]).to.equal(tomorrow)
                 expect(await x404.connect(user).checkTokenIdExsit(0)).to.equal(true)
+                expect(await x404.connect(user).maxNftTokenId()).to.equal(0)
+                expect(await x404.connect(user).minted()).to.equal(1)
+
+                await expect(x404.connect(user).depositNFT([2], tomorrow)).to.be.not.reverted
+                expect(await x404.connect(user).checkTokenIdExsit(2)).to.equal(true)
+                expect(await x404.connect(user).maxNftTokenId()).to.equal(2)
+                expect(await x404.connect(user).minted()).to.equal(2)
             });
             it('Get correct available if use use safeTransferFrom.',   async function () {
                 const abicode = abiCoder.encode(['uint256'], [tomorrow]);

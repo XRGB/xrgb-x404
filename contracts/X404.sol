@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.17;
 
 import {ERC404} from "./ERC404.sol";
@@ -64,7 +63,7 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
     /// @param tokenIds The array tokenid of deposit nft.
     /// @param redeemDeadline The redeemDeadline. means before deadline, Only you can redeem your nft. after deadline, anyone who hold more than units erc20 token can redeem your nft.
     function depositNFT(
-        uint256[] calldata tokenIds,
+        uint256[] memory tokenIds,
         uint256 redeemDeadline
     ) external {
         if (
@@ -101,12 +100,12 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
                 i++;
             }
         }
-        _transferERC20WithERC721(address(0), msg.sender, len * units);
+        _mintERC20WithSpecificTokenId(msg.sender, len * units, tokenIds);
     }
 
     /// @notice redeem nfts from contract when user hold n * units erc20 token
     /// @param tokenIds The array tokenid of redeem nft.
-    function redeemNFT(uint256[] calldata tokenIds) external {
+    function redeemNFT(uint256[] memory tokenIds) external {
         uint256 len = tokenIds.length;
         if (len == 0) {
             revert Errors.InvalidLength();
@@ -159,7 +158,10 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
         ) {
             revert Errors.InvalidDeadLine();
         }
-        _transferERC20WithERC721(address(0), from, units);
+        //_transferERC20WithERC721(address(0), from, units);
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        _mintERC20WithSpecificTokenId(from, units, tokenIds);
         if (tokenIdSet.add(tokenId)) {
             NFTDepositInfo storage subInfo = nftDepositInfo[tokenId];
             subInfo.caller = caller;
@@ -195,7 +197,7 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
     }
 
     function tokenURI(uint256 id) public view override returns (string memory) {
-        return string.concat(baseTokenURI, Strings.toString(id));
+        return IERC721Metadata(blueChipNftAddr).tokenURI(id);
     }
 
     /**************Internal Function **********/
