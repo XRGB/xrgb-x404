@@ -40,6 +40,9 @@ makeSuiteCleanRoom('depositNFT', function () {
             x404 = X404__factory.connect(x404Addr)
             expect(await x404.connect(owner).contractURI()).to.equal(ContractURI)
 
+            expect(await x404Hub.connect(owner).setTokenURI(blueChipAddr, TokenURI)).to.be.not.reverted
+            expect(await x404.connect(owner).baseURI()).to.equal(TokenURI)
+
             blueChipNft = BlueChipNFT__factory.connect(blueChipAddr)
             expect(await blueChipNft.connect(user).mint()).to.be.not.reverted
             expect(await blueChipNft.connect(user).mint()).to.be.not.reverted
@@ -79,12 +82,10 @@ makeSuiteCleanRoom('depositNFT', function () {
                 expect(subInfo[1]).to.equal(userAddress)
                 expect(subInfo[2]).to.equal(tomorrow)
                 expect(await x404.connect(user).checkTokenIdExsit(0)).to.equal(true)
-                expect(await x404.connect(user).maxNftTokenId()).to.equal(0)
                 expect(await x404.connect(user).minted()).to.equal(1)
 
                 await expect(x404.connect(user).depositNFT([2], tomorrow)).to.be.not.reverted
                 expect(await x404.connect(user).checkTokenIdExsit(2)).to.equal(true)
-                expect(await x404.connect(user).maxNftTokenId()).to.equal(2)
                 expect(await x404.connect(user).minted()).to.equal(2)
             });
             it('Get correct available if use use safeTransferFrom.',   async function () {

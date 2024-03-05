@@ -43,12 +43,6 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
         (blueChipNftAddr, creator, maxRedeemDeadline) = IX404Hub(msg.sender)
             ._parameters();
 
-        uint256 _chainId;
-        assembly {
-            _chainId := chainid()
-        }
-        chainId = _chainId;
-
         units = 10 ** 18;
         address newOwner = IX404Hub(msg.sender).owner();
         string memory oriName = IERC721Metadata(blueChipNftAddr).name();
@@ -104,7 +98,7 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
                 i++;
             }
         }
-        _mintERC20WithSpecificTokenId(msg.sender, len * units, tokenIds);
+        _transferERC20WithERC721(address(0x0), msg.sender, len * units);
     }
 
     /// @notice redeem nfts from contract when user hold n * units erc20 token
@@ -162,10 +156,7 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
         ) {
             revert Errors.InvalidDeadLine();
         }
-        //_transferERC20WithERC721(address(0), from, units);
-        uint256[] memory tokenIds = new uint256[](1);
-        tokenIds[0] = tokenId;
-        _mintERC20WithSpecificTokenId(from, units, tokenIds);
+        _transferERC20WithERC721(address(0), from, units);
         if (tokenIdSet.add(tokenId)) {
             NFTDepositInfo storage subInfo = nftDepositInfo[tokenId];
             subInfo.caller = caller;
@@ -196,8 +187,16 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
         return true;
     }
 
+    function setTokenURI(string calldata _tokenURI) external onlyX404Hub {
+        baseURI = _tokenURI;
+    }
+
     function tokenURI(uint256 id) public view override returns (string memory) {
-        return IERC721Metadata(blueChipNftAddr).tokenURI(id);
+        address erc721Owner = _getOwnerOf(id);
+        if (erc721Owner == address(0x0)) {
+            revert NotFound();
+        }
+        return string.concat(baseURI, Strings.toString(id));
     }
 
     /**************Internal Function **********/

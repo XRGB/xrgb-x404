@@ -67,6 +67,16 @@ contract X404Hub is OwnableUpgradeable, X404HubStorage {
         X404(_x404Contract[nftContract]).setContractURI(newContractUri);
     }
 
+    function setTokenURI(
+        address nftContract,
+        string calldata newTokenURI
+    ) public onlyOwner {
+        if (_x404Contract[nftContract] == address(0)) {
+            revert Errors.X404NotCreate();
+        }
+        X404(_x404Contract[nftContract]).setTokenURI(newTokenURI);
+    }
+
     function setSupportChain(uint256 chainId, bool bSet) external onlyOwner {
         _supportChain[chainId] = bSet;
     }

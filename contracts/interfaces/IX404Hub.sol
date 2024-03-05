@@ -8,16 +8,7 @@ interface IX404Hub {
         view
         returns (address blueChipNft, address creator, uint256 deadline);
 
-    function getForceBuyParam()
-        external
-        view
-        returns (uint256 minimumNftAmount, uint256 ratio);
-
     function owner() external view returns (address owner);
-
-    function _supportChain(
-        uint256 chainId
-    ) external view returns (bool bSupport);
 
     function getSwapRouter()
         external
