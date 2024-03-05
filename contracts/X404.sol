@@ -141,22 +141,6 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
         }
     }
 
-    function bridgeX404To(uint256 amount, uint256 bridgeTo) external {
-        if (amount == 0) {
-            revert Errors.InvalidAmount();
-        }
-        if (bridgeTo == chainId) {
-            revert Errors.CannotBridgeSelf();
-        }
-        bool bSupport = IX404Hub(x404Hub)._supportChain(bridgeTo);
-        if (!bSupport) {
-            revert Errors.NotSuportThisChainId();
-        }
-        _transferERC20WithERC721(msg.sender, address(0), amount);
-
-        emit Events.X404BridgeTo(msg.sender, bridgeTo, amount);
-    }
-
     /// @notice when user send nft to this contract by "safeTransferFrom"
     /// @param caller caller who call function "safeTransferFrom".
     /// @param from The Nft owner
