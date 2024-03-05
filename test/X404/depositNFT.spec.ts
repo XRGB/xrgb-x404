@@ -1,10 +1,11 @@
 
 import {
-    makeSuiteCleanRoom,deployer, x404Hub, owner, deployerAddress, user, yestoday, tomorrow, tomorrow2, userAddress, abiCoder
+    makeSuiteCleanRoom,deployer, x404Hub, owner, deployerAddress, user, yestoday, tomorrow, tomorrow2, userAddress, abiCoder, userTwoAddress, ownerAddress
 } from '../__setup.spec';
 import { expect } from 'chai';
 import { ERRORS } from '../helpers/errors';
 import { findEvent, waitForTx } from '../helpers/utils';
+import { parseEther } from 'ethers';
 
 import {
     BlueChipNFT,
@@ -44,6 +45,8 @@ makeSuiteCleanRoom('depositNFT', function () {
             expect(await x404.connect(owner).baseURI()).to.equal(TokenURI)
 
             blueChipNft = BlueChipNFT__factory.connect(blueChipAddr)
+            expect(await blueChipNft.connect(user).mint()).to.be.not.reverted
+            expect(await blueChipNft.connect(user).mint()).to.be.not.reverted
             expect(await blueChipNft.connect(user).mint()).to.be.not.reverted
             expect(await blueChipNft.connect(user).mint()).to.be.not.reverted
             expect(await blueChipNft.connect(user).mint()).to.be.not.reverted
@@ -88,7 +91,7 @@ makeSuiteCleanRoom('depositNFT', function () {
                 expect(await x404.connect(user).checkTokenIdExsit(2)).to.equal(true)
                 expect(await x404.connect(user).minted()).to.equal(2)
             });
-            it('Get correct available if use use safeTransferFrom.',   async function () {
+            it('Get correct available if user use safeTransferFrom.',   async function () {
                 const abicode = abiCoder.encode(['uint256'], [tomorrow]);
                 await expect(blueChipNft.connect(user)['safeTransferFrom(address,address,uint256,bytes)'](userAddress, x404Addr, 0, abicode)).to.be.not.reverted
                 expect(await blueChipNft.connect(user).ownerOf(0)).to.equal(await x404.getAddress())
@@ -98,6 +101,37 @@ makeSuiteCleanRoom('depositNFT', function () {
                 expect(subInfo[1]).to.equal(userAddress)
                 expect(subInfo[2]).to.equal(tomorrow)
                 expect(await x404.connect(user).checkTokenIdExsit(0)).to.equal(true)
+            });
+            it('Get correct available if user transfer many times.',   async function () {
+                const x404Addr = await x404.getAddress()
+                const abicode = abiCoder.encode(['uint256'], [tomorrow]);
+                await expect(blueChipNft.connect(user)['safeTransferFrom(address,address,uint256,bytes)'](userAddress, x404Addr, 1, abicode)).to.be.not.reverted
+                expect(await blueChipNft.connect(user).ownerOf(1)).to.equal(x404Addr)
+                
+                const subInfo = await x404.connect(user).nftDepositInfo(1)
+                expect(subInfo[0]).to.equal(userAddress)
+                expect(subInfo[1]).to.equal(userAddress)
+                expect(subInfo[2]).to.equal(tomorrow)
+                expect(await x404.connect(user).checkTokenIdExsit(1)).to.equal(true)
+                expect(await x404.connect(user).minted()).to.equal(1)
+
+                await expect(blueChipNft.connect(user).setApprovalForAll(x404.getAddress(), true)).to.be.not.reverted;
+                await expect(x404.connect(user).depositNFT([0,2,3], tomorrow)).to.be.not.reverted
+                expect(await blueChipNft.connect(user).balanceOf(x404Addr)).to.equal(4)
+                expect(await x404.connect(user).erc721TotalSupply()).to.equal(4)
+
+                await expect(x404.connect(user).transfer(userTwoAddress, parseEther("0.5"))).to.be.not.reverted
+                await expect(x404.connect(user).transfer(ownerAddress, parseEther("0.6"))).to.be.not.reverted
+                expect(await x404.connect(user).erc721TotalSupply()).to.equal(4)
+                expect(await x404.connect(user).erc721BalanceOf(userAddress)).to.equal(2)
+                const arr = await x404.connect(user).getERC721TokensInQueue(0,2)
+                expect(arr[0]).to.equal(3)
+                expect(arr[1]).to.equal(4)
+                await expect(x404.connect(user).transfer(userTwoAddress, parseEther("0.5"))).to.be.not.reverted
+                expect(await x404.connect(user).erc721TotalSupply()).to.equal(4)
+                expect(await x404.connect(user).erc721BalanceOf(userAddress)).to.equal(2)
+                expect(await x404.connect(user).erc721BalanceOf(userTwoAddress)).to.equal(1)
+                expect(await x404.connect(user).ownerOf(4)).to.equal(userTwoAddress)
             });
         })
     })

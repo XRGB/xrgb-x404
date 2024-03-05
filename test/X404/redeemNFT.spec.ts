@@ -45,6 +45,8 @@ makeSuiteCleanRoom('redeemNFT', function () {
             expect(await blueChipNft.connect(user).mint()).to.be.not.reverted
             expect(await blueChipNft.connect(user).mint()).to.be.not.reverted
             expect(await blueChipNft.connect(user).mint()).to.be.not.reverted
+            expect(await blueChipNft.connect(user).mint()).to.be.not.reverted
+            expect(await blueChipNft.connect(user).mint()).to.be.not.reverted
             expect(await blueChipNft.connect(userTwo).mint()).to.be.not.reverted
             normalNft = BlueChipNFT__factory.connect(nft0Addr)
             expect(await normalNft.connect(user).mint()).to.be.not.reverted
@@ -56,10 +58,12 @@ makeSuiteCleanRoom('redeemNFT', function () {
             expect(await x404.connect(user).erc721BalanceOf(userAddress)).to.equal(1)
 
             await blueChipNft.connect(user).setApprovalForAll(x404.getAddress(), true);
-            await expect(x404.connect(user).depositNFT([1], tomorrow)).to.be.not.reverted
-            expect(await blueChipNft.connect(user).ownerOf(1)).to.equal(await x404.getAddress())
+            await expect(x404.connect(user).depositNFT([3], tomorrow)).to.be.not.reverted
+            expect(await blueChipNft.connect(user).ownerOf(3)).to.equal(await x404.getAddress())
             expect(await x404.connect(user).balanceOf(userAddress)).to.equal(parseEther("2"))
             expect(await x404.connect(user).erc721BalanceOf(userAddress)).to.equal(2)
+            expect(await x404.connect(user).ownerOf(1)).to.equal(userAddress)
+            expect(await x404.connect(user).ownerOf(2)).to.equal(userAddress)
 
             const subInfo = await x404.connect(user).nftDepositInfo(0)
             expect(subInfo[0]).to.equal(userAddress)
@@ -81,7 +85,7 @@ makeSuiteCleanRoom('redeemNFT', function () {
             });
             it('User should fail to redeem if erc20 token not enough.',   async function () {
                 const abicode = abiCoder.encode(['uint256'], [tomorrow]);
-                await expect(blueChipNft.connect(userTwo)['safeTransferFrom(address,address,uint256,bytes)'](userTwoAddress, x404Addr, 3, abicode)).to.be.not.reverted
+                await expect(blueChipNft.connect(userTwo)['safeTransferFrom(address,address,uint256,bytes)'](userTwoAddress, x404Addr, 5, abicode)).to.be.not.reverted
                 expect(await x404.connect(user).balanceOf(userTwoAddress)).to.equal(parseEther("1"))
                 expect(await x404.connect(user).erc721BalanceOf(userTwoAddress)).to.equal(1)
 
@@ -98,9 +102,14 @@ makeSuiteCleanRoom('redeemNFT', function () {
             });
             it('Redeem success if you are the owner.',   async function () {
                 const abicode = abiCoder.encode(['uint256'], [tomorrow]);
-                await expect(blueChipNft.connect(userTwo)['safeTransferFrom(address,address,uint256,bytes)'](userTwoAddress, x404Addr, 3, abicode)).to.be.not.reverted
+                await expect(blueChipNft.connect(userTwo)['safeTransferFrom(address,address,uint256,bytes)'](userTwoAddress, x404Addr, 5, abicode)).to.be.not.reverted
                 expect(await x404.connect(user).balanceOf(userTwoAddress)).to.equal(parseEther("1"))
                 expect(await x404.connect(user).erc721BalanceOf(userTwoAddress)).to.equal(1)
+                expect(await x404.connect(user).ownerOf(3)).to.equal(userTwoAddress)
+                expect(await x404.connect(user).checkTokenIdExsit(5)).to.equal(true)
+                expect(await x404.connect(user).checkTokenIdExsit(0)).to.equal(true)
+                expect(await x404.connect(user).checkTokenIdExsit(3)).to.equal(true)
+                expect(await x404.connect(user).erc721TotalSupply()).to.equal(3)
 
                 const currentTimestamp = await getTimestamp();
                 await setNextBlockTimestamp(Number(currentTimestamp) + 48 * 60 * 60);
@@ -108,7 +117,12 @@ makeSuiteCleanRoom('redeemNFT', function () {
                 await expect(x404.connect(userTwo).redeemNFT([0])).to.be.not.reverted
                 expect(await x404.connect(user).balanceOf(userTwoAddress)).to.equal(0)
                 expect(await x404.connect(user).erc721BalanceOf(userTwoAddress)).to.equal(0)
+                await expect(x404.connect(user).ownerOf(3)).to.be.reverted
                 expect(await blueChipNft.connect(user).ownerOf(0)).to.equal(userTwoAddress)
+
+                expect(await x404.connect(user).erc721TotalSupply()).to.equal(3)
+                const arr = await x404.connect(user).getERC721TokensInQueue(0,1)
+                expect(arr[0]).to.equal(3)
             });
         })
     })
