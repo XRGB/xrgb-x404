@@ -31,13 +31,6 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
         _;
     }
 
-    modifier onlyEOA() {
-        if (msg.sender != tx.origin) {
-            revert Errors.OnlySupportEOA();
-        }
-        _;
-    }
-
     constructor() Ownable(msg.sender) {
         decimals = 18;
         (blueChipNftAddr, creator, maxRedeemDeadline) = IX404Hub(msg.sender)
@@ -86,7 +79,7 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
                 subInfo.oriOwner = msg.sender;
                 subInfo.redeemDeadline = redeemDeadline;
             } else {
-                revert Errors.InvalidTokenId();
+                revert InvalidTokenId();
             }
             emit Events.X404DepositNFT(
                 msg.sender,
@@ -103,10 +96,41 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
 
     /// @notice redeem nfts from contract when user hold n * units erc20 token
     /// @param tokenIds The array tokenid of redeem nft.
-    function redeemNFT(uint256[] memory tokenIds) external {
+    function redeemNFT(uint256[] memory tokenIds) external payable {
         uint256 len = tokenIds.length;
         if (len == 0) {
             revert Errors.InvalidLength();
+        }
+        if (redeemFee > 0) {
+            //revert if msg.value < redeemFee
+            uint256 totalRedeemFee = len * redeemFee;
+            if (msg.value < totalRedeemFee) {
+                revert Errors.MsgValueNotEnough();
+            }
+            //send redeemFee
+            (bool sucess, ) = payable(owner()).call{value: totalRedeemFee}("");
+            if (!sucess) {
+                revert Errors.SendETHFailed();
+            }
+            //refund if msg.value > redeemFee
+            if (msg.value > totalRedeemFee) {
+                (bool sucess1, ) = payable(msg.sender).call{
+                    value: msg.value - totalRedeemFee
+                }("");
+                if (!sucess1) {
+                    revert Errors.SendETHFailed();
+                }
+            }
+        } else {
+            //refund if not charge redeemFee
+            if (msg.value > 0) {
+                (bool sucess2, ) = payable(msg.sender).call{value: msg.value}(
+                    ""
+                );
+                if (!sucess2) {
+                    revert Errors.SendETHFailed();
+                }
+            }
         }
 
         _transferERC20WithERC721(msg.sender, address(0), units * len);
@@ -163,7 +187,7 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
             subInfo.oriOwner = from;
             subInfo.redeemDeadline = redeemDeadline;
         } else {
-            revert Errors.InvalidTokenId();
+            revert InvalidTokenId();
         }
         emit Events.X404DepositNFT(caller, from, tokenId, redeemDeadline);
 
@@ -184,6 +208,16 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
         string calldata newContractUri
     ) external onlyX404Hub returns (bool) {
         contractURI = newContractUri;
+        return true;
+    }
+
+    function setRedeemFee(
+        uint256 newRedeemFee
+    ) external onlyX404Hub returns (bool) {
+        if (newRedeemFee > 0.2 ether) {
+            revert Errors.RedeemFeeTooHigh();
+        }
+        redeemFee = newRedeemFee;
         return true;
     }
 

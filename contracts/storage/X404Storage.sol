@@ -5,6 +5,7 @@ import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet
 abstract contract X404Storage {
     string public contractURI;
     string public baseURI;
+    uint256 public redeemFee;
 
     //if not redeem your nft before deadline, others who hold units token maybe can get your nft, if no one get, you also can get your origin nft.
     uint256 public maxRedeemDeadline;

@@ -20,10 +20,4 @@ library Events {
         address indexed depositor,
         uint256 indexed tokenId
     );
-
-    event X404BridgeTo(
-        address indexed redeemer,
-        uint256 indexed bridgeTo,
-        uint256 amount
-    );
 }
