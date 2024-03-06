@@ -11,4 +11,8 @@ contract BlueChipNFT is ERC721 {
     function mint() public {
         _safeMint(msg.sender, tokenId++);
     }
+
+    function _baseURI() internal view virtual override returns (string memory) {
+        return "ipfs://QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq/";
+    }
 }
