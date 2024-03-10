@@ -87,10 +87,6 @@ contract X404Hub is OwnableUpgradeable, X404HubStorage {
         X404(_x404Contract[nftContract]).setTokenURI(newTokenURI);
     }
 
-    function setSupportChain(uint256 chainId, bool bSet) external onlyOwner {
-        _supportChain[chainId] = bSet;
-    }
-
     function setNewRedeemDeadline(uint256 newDeadline) public onlyOwner {
         if (newDeadline == 0) {
             revert Errors.InvaildRedeemMaxDeadline();
