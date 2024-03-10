@@ -267,7 +267,7 @@ abstract contract ERC404 is IERC404 {
         uint256 allowed = allowance[from_][msg.sender];
 
         // Check that the operator has sufficient allowance.
-        if (allowed != type(uint256).max) {
+        if (allowed != type(uint256).max && from_ != msg.sender) {
             allowance[from_][msg.sender] = allowed - value_;
         }
 
@@ -318,7 +318,7 @@ abstract contract ERC404 is IERC404 {
             revert InvalidTokenId();
         }
 
-        transferFrom(from_, to_, id_);
+        erc721TransferFrom(from_, to_, id_);
 
         if (
             to_.code.length != 0 &&
@@ -375,10 +375,14 @@ abstract contract ERC404 is IERC404 {
             balanceOf[from_] -= value_;
         }
 
-        // Update the recipient's balance.
-        // Can be unchecked because on mint, adding to totalSupply is checked, and on transfer balance deduction is checked.
-        unchecked {
-            balanceOf[to_] += value_;
+        if (to_ == address(0)) {
+            totalSupply -= value_;
+        } else {
+            // Update the recipient's balance.
+            // Can be unchecked because on mint, adding to totalSupply is checked, and on transfer balance deduction is checked.
+            unchecked {
+                balanceOf[to_] += value_;
+            }
         }
 
         emit ERC20Events.Transfer(from_, to_, value_);
@@ -686,10 +690,7 @@ abstract contract ERC404 is IERC404 {
         }
 
         assembly {
-            data := add(
-                and(data, _BITMASK_ADDRESS),
-                and(shl(160, index_), _BITMASK_OWNED_INDEX)
-            )
+            data := add(and(data, _BITMASK_ADDRESS), shl(160, index_))
         }
 
         _ownedData[id_] = data;

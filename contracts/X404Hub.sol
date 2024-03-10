@@ -114,6 +114,10 @@ contract X404Hub is OwnableUpgradeable, X404HubStorage {
         _bEmergencyClose = bClose;
     }
 
+    function setCreateX404Permission(bool bPermission) public onlyOwner {
+        _bNoPermission = bPermission;
+    }
+
     function setBlueChipNftContract(
         address[] memory contractAddrs,
         bool state

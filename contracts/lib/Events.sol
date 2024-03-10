@@ -20,4 +20,8 @@ library Events {
         address indexed depositor,
         uint256 indexed tokenId
     );
+
+    event SetContractURI(string indexed contractURI);
+    event SetTokenURI(string indexed tokenURI);
+    event SetRedeemFee(uint256 indexed redeemFee);
 }

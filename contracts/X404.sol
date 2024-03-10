@@ -143,6 +143,9 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
             ) {
                 revert Errors.NFTCannotRedeem();
             }
+            if (!tokenIdSet.remove(tokenIds[i])) {
+                revert Errors.RemoveFailed();
+            }
             IERC721Metadata(blueChipNftAddr).safeTransferFrom(
                 address(this),
                 msg.sender,
@@ -150,9 +153,6 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
             );
             emit Events.X404RedeemNFT(msg.sender, oriOwner, tokenIds[i]);
             delete nftDepositInfo[tokenIds[i]];
-            if (!tokenIdSet.remove(tokenIds[i])) {
-                revert Errors.RemoveFailed();
-            }
             unchecked {
                 i++;
             }
@@ -207,7 +207,11 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
     function setContractURI(
         string calldata newContractUri
     ) external onlyX404Hub returns (bool) {
+        if (bytes(newContractUri).length == 0) {
+            revert Errors.InvalidLength();
+        }
         contractURI = newContractUri;
+        emit Events.SetContractURI(contractURI);
         return true;
     }
 
@@ -218,11 +222,16 @@ contract X404 is IERC721Receiver, ERC404, Ownable, X404Storage {
             revert Errors.RedeemFeeTooHigh();
         }
         redeemFee = newRedeemFee;
+        emit Events.SetRedeemFee(redeemFee);
         return true;
     }
 
     function setTokenURI(string calldata _tokenURI) external onlyX404Hub {
+        if (bytes(_tokenURI).length == 0) {
+            revert Errors.InvalidLength();
+        }
         baseURI = _tokenURI;
+        emit Events.SetTokenURI(baseURI);
     }
 
     function tokenURI(uint256 id) public view override returns (string memory) {
