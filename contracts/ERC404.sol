@@ -98,7 +98,11 @@ abstract contract ERC404 is IERC404 {
     }
 
     function erc721TotalSupply() public view virtual returns (uint256) {
-        return minted;
+        return minted - _storedERC721Ids.length();
+    }
+
+    function getERC721QueueLength() public view virtual returns (uint256) {
+        return _storedERC721Ids.length();
     }
 
     function getERC721TokensInQueue(
