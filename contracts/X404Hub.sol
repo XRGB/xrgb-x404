@@ -24,6 +24,11 @@ contract X404Hub is OwnableUpgradeable, X404HubStorage {
         _;
     }
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(
         address owner,
         uint256 maxRedeemDeadline,
