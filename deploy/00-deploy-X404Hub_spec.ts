@@ -40,7 +40,8 @@ const deployFn: DeployFunction = async (hre) => {
     '0x23581767a106ae21c074b2276D25e5C3e136a68b', //Moonbirds (MOONBIRD)  C URL
     '0xED5AF388653567Af2F388E6224dC7C4b3241C544', //Azuki (AZUKI)
     '0x8a90CAb2b38dba80c64b7734e58Ee1dB38B8992e', //Doodles (DOODLE)
-    '0x59468516a8259058baD1cA5F8f4BFF190d30E066'  //Invisible Friends (INVSBLE)
+    '0x59468516a8259058baD1cA5F8f4BFF190d30E066', //Invisible Friends (INVSBLE)
+    '0x5Af0D9827E0c53E4799BB226655A1de152A425a5'  //Milady (MIL)
   ]
   const x404Hub = X404Hub__factory.connect(proxyAddress)
   await x404Hub.connect(deployer).setBlueChipNftContract(blue_chip_addresses, true)
