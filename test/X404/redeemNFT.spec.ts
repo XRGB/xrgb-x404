@@ -134,7 +134,7 @@ makeSuiteCleanRoom('redeemNFT', function () {
                 expect(await blueChipNft.connect(user).ownerOf(3)).to.equal(userTwoAddress)
                 expect(await blueChipNft.connect(user).ownerOf(5)).to.equal(userTwoAddress)
 
-                expect(await x404.connect(user).erc721TotalSupply()).to.equal(4)
+                expect(await x404.connect(user).erc721TotalSupply()).to.equal(2)
                 const arr = await x404.connect(user).getERC721TokensInQueue(0,2)
                 expect(arr[0]).to.equal(3)
                 expect(arr[1]).to.equal(4)

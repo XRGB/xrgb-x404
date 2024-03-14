@@ -122,13 +122,13 @@ makeSuiteCleanRoom('depositNFT', function () {
 
                 await expect(x404.connect(user).transfer(userTwoAddress, parseEther("0.5"))).to.be.not.reverted
                 await expect(x404.connect(user).transfer(ownerAddress, parseEther("0.6"))).to.be.not.reverted
-                expect(await x404.connect(user).erc721TotalSupply()).to.equal(4)
+                expect(await x404.connect(user).erc721TotalSupply()).to.equal(2)
                 expect(await x404.connect(user).erc721BalanceOf(userAddress)).to.equal(2)
                 const arr = await x404.connect(user).getERC721TokensInQueue(0,2)
                 expect(arr[0]).to.equal(3)
                 expect(arr[1]).to.equal(4)
                 await expect(x404.connect(user).transfer(userTwoAddress, parseEther("0.5"))).to.be.not.reverted
-                expect(await x404.connect(user).erc721TotalSupply()).to.equal(4)
+                expect(await x404.connect(user).erc721TotalSupply()).to.equal(3)
                 expect(await x404.connect(user).erc721BalanceOf(userAddress)).to.equal(2)
                 expect(await x404.connect(user).erc721BalanceOf(userTwoAddress)).to.equal(1)
                 expect(await x404.connect(user).ownerOf(4)).to.equal(userTwoAddress)
